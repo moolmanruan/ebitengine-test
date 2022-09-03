@@ -54,9 +54,14 @@ func handleMouseStateChange(g *Game) {
 			if g.deck.Card(0).In(x, y) {
 				drawn, newDeck := g.deck.Draw(g.drawAmount)
 				g.deck = newDeck
-				g.cards = append(g.cards, drawn...)
+
 				for _, c := range drawn {
+					i := len(g.cards)
+					offset := cardSize.Scale(1.1)
+					pos, row := i%cardsPerRow, i/cardsPerRow
+					c.SetPosition(g.deckPos.X+float64(pos+1)*offset.X, g.deckPos.Y+float64(row)*offset.Y)
 					c.SetFaceUp(true, 0)
+					g.cards = append(g.cards, c)
 				}
 			}
 		}
@@ -116,18 +121,13 @@ const cardsPerRow = 13
 var cardSize = Point2D{cardW, cardH}.Scale(cardScale)
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	p := g.deckPos
 	if g.deck.Size() > 0 {
 		t := fmt.Sprintf("Cards left: %d  Draw rate: %d", g.deck.Size(), g.drawAmount)
-		text.Draw(screen, t, mplusNormalFont, int(p.X-cardSize.X/2), int(p.Y-cardSize.Y/2), color.White)
-		c := g.deck.Card(0).SetPosition(p.X, p.Y)
-		c.Draw(screen)
+		text.Draw(screen, t, mplusNormalFont, int(g.deckPos.X-cardSize.X/2), int(g.deckPos.Y-cardSize.Y/2-5), color.White)
+		g.deck.Card(0).Draw(screen)
 	}
-	for i, c := range g.cards {
-		offset := cardSize.Scale(1.1)
-		pos, row := i%cardsPerRow, i/cardsPerRow
-		card := c.SetPosition(p.X+float64(pos+1)*offset.X, p.Y+float64(row)*offset.Y)
-		card.Draw(screen)
+	for _, c := range g.cards {
+		c.Draw(screen)
 	}
 }
 
@@ -140,7 +140,7 @@ func main() {
 	d = d.Shuffle()
 	deckPos := Point2D{50, 50}
 	for _, c := range d.Cards() {
-		c.SetFaceUp(false, 0)
+		c.SetFaceUp(false, 0).SetPosition(deckPos.X, deckPos.Y)
 		c.SetPosition(deckPos.X, deckPos.Y).SetScale(cardScale, cardScale)
 	}
 	game := &Game{
