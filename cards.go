@@ -9,6 +9,7 @@ import (
 	"image"
 	"log"
 	"math"
+	"time"
 )
 
 //go:embed resources/playingcards/cards-basic.PNG
@@ -35,11 +36,12 @@ var suitIndex = map[card.Suit]int{
 
 type GameCard struct {
 	card.Card
-	Front      *ebiten.Image
-	Back       *ebiten.Image
-	FaceDown   bool
-	geom       ebiten.GeoM
-	x, y, s, r float64
+	Front           *ebiten.Image
+	Back            *ebiten.Image
+	geom            ebiten.GeoM
+	x, y, sx, sy, r float64
+	faceDown        bool
+	flip            float64 // Progress of card flip (0:face up -> 1:face down)
 }
 
 func NewGameCard(card card.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
@@ -60,8 +62,8 @@ func (c *GameCard) SetPosition(x, y float64) *GameCard {
 	c.x, c.y = x, y
 	return c
 }
-func (c *GameCard) SetScale(scale float64) *GameCard {
-	c.s = scale
+func (c *GameCard) SetScale(x, y float64) *GameCard {
+	c.sx, c.sy = x, y
 	return c
 }
 func (c *GameCard) SetRotation(radians float64) *GameCard {
@@ -69,12 +71,60 @@ func (c *GameCard) SetRotation(radians float64) *GameCard {
 	return c
 }
 
-func (c *GameCard) DrawOptions() *ebiten.DrawImageOptions {
+func (c *GameCard) FaceUp() bool {
+	return !c.faceDown
+}
+
+func (c *GameCard) SetFaceUp(up bool, duration time.Duration) *GameCard {
+	c.faceDown = !up
+	if duration < time.Millisecond {
+		if c.faceDown {
+			c.flip = 1
+		} else {
+			c.flip = 0
+		}
+		return c
+	}
+
+	if c.flip <= 0 || c.flip >= 1 {
+		go animateCardFlip(c, duration)
+	}
+	return c
+}
+
+func animateCardFlip(c *GameCard, duration time.Duration) {
+	delay := time.Millisecond * 20
+	delta := float64(delay.Milliseconds()) / float64(duration.Milliseconds())
+
+	for {
+		if c.faceDown {
+			c.flip += delta
+			if c.flip > 1 {
+				c.flip = 1
+				break
+			}
+		} else {
+			c.flip -= delta
+			if c.flip < 0 {
+				c.flip = 0
+				break
+			}
+		}
+		time.Sleep(delay)
+	}
+}
+
+func (c *GameCard) Draw(dst *ebiten.Image) {
+	face := c.Front
+	if c.flip > 0.5 {
+		face = c.Back
+	}
+	flipRatio := math.Min(math.Abs(c.flip-0.5)*2, 1)
 	geom := c.geom
 	geom.Rotate(c.r)
-	geom.Scale(c.s, c.s)
+	geom.Scale(c.sx*flipRatio, c.sy)
 	geom.Translate(c.x, c.y)
-	return &ebiten.DrawImageOptions{GeoM: geom}
+	dst.DrawImage(face, &ebiten.DrawImageOptions{GeoM: geom})
 }
 
 func floor(v float64) int {
@@ -85,7 +135,7 @@ func ceil(v float64) int {
 }
 
 func (c *GameCard) In(x, y int) bool {
-	chw, chh := cardW/2*c.s, cardH/2*c.s
+	chw, chh := cardW/2*c.sx, cardH/2*c.sy
 	minX, minY := floor(c.x-chw), floor(c.y-chh)
 	maxX, maxY := ceil(c.x+chw), ceil(c.y+chh)
 	return x >= minX && x <= maxX && y >= minY && y <= maxY

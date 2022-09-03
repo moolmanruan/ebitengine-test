@@ -12,6 +12,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"time"
 )
 
 const (
@@ -46,7 +47,7 @@ func handleMouseStateChange(g *Game) {
 		x, y := ebiten.CursorPosition()
 		for _, c := range g.cards {
 			if c.In(x, y) {
-				c.FaceDown = !c.FaceDown
+				c.SetFaceUp(!c.FaceUp(), time.Millisecond*200)
 			}
 		}
 		if g.deck.Size() > 0 {
@@ -54,6 +55,9 @@ func handleMouseStateChange(g *Game) {
 				drawn, newDeck := g.deck.Draw(g.drawAmount)
 				g.deck = newDeck
 				g.cards = append(g.cards, drawn...)
+				for _, c := range drawn {
+					c.SetFaceUp(true, 0)
+				}
 			}
 		}
 	}
@@ -117,19 +121,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		t := fmt.Sprintf("Cards left: %d  Draw rate: %d", g.deck.Size(), g.drawAmount)
 		text.Draw(screen, t, mplusNormalFont, int(p.X-cardSize.X/2), int(p.Y-cardSize.Y/2), color.White)
 		c := g.deck.Card(0).SetPosition(p.X, p.Y)
-		screen.DrawImage(c.Back, c.DrawOptions())
+		c.Draw(screen)
 	}
 	for i, c := range g.cards {
 		offset := cardSize.Scale(1.1)
 		pos, row := i%cardsPerRow, i/cardsPerRow
 		card := c.SetPosition(p.X+float64(pos+1)*offset.X, p.Y+float64(row)*offset.Y)
-		var face *ebiten.Image
-		if card.FaceDown {
-			face = card.Back
-		} else {
-			face = card.Front
-		}
-		screen.DrawImage(face, card.DrawOptions())
+		card.Draw(screen)
 	}
 }
 
@@ -142,7 +140,8 @@ func main() {
 	d = d.Shuffle()
 	deckPos := Point2D{50, 50}
 	for _, c := range d.Cards() {
-		c.SetPosition(deckPos.X, deckPos.Y).SetScale(cardScale)
+		c.SetFaceUp(false, 0)
+		c.SetPosition(deckPos.X, deckPos.Y).SetScale(cardScale, cardScale)
 	}
 	game := &Game{
 		deck:       d,
