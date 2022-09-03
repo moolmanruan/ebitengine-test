@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/moolmanruan/ebitengine-test/card"
 	"github.com/moolmanruan/ebitengine-test/deck"
+	"github.com/ungerik/go3d/float64/vec2"
 	"image"
 	"log"
 	"math"
@@ -36,12 +37,13 @@ var suitIndex = map[card.Suit]int{
 
 type GameCard struct {
 	card.Card
-	Front           *ebiten.Image
-	Back            *ebiten.Image
-	geom            ebiten.GeoM
-	x, y, sx, sy, r float64
-	faceDown        bool
-	flip            float64 // Progress of card flip (0:face up -> 1:face down)
+	Front     *ebiten.Image
+	Back      *ebiten.Image
+	geom      ebiten.GeoM
+	sx, sy, r float64
+	pos, dest vec2.T
+	faceDown  bool
+	flip      float64 // Progress of card flip (0:face up -> 1:face down)
 }
 
 func NewGameCard(card card.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
@@ -56,11 +58,36 @@ func NewGameCard(card card.Card, frontFace *ebiten.Image, backFace *ebiten.Image
 }
 
 func (c *GameCard) Position() (x, y float64) {
-	return c.x, c.y
+	return c.pos[0], c.pos[1]
 }
-func (c *GameCard) SetPosition(x, y float64) *GameCard {
-	c.x, c.y = x, y
+
+func (c *GameCard) SetPosition(pos vec2.T, pixelsPerSecond float64) *GameCard {
+	c.dest = pos
+	if pixelsPerSecond > 0 {
+		go animateMove(c, pixelsPerSecond)
+	} else {
+		c.pos = pos
+	}
 	return c
+}
+
+func animateMove(c *GameCard, pixelsPerSecond float64) {
+	delay := time.Millisecond * 20
+	delaysPerSecond := 1000 / float64(delay.Milliseconds())
+	pixelsPerDelay := pixelsPerSecond / delaysPerSecond
+
+	for {
+		offset := c.dest.Subed(&c.pos)
+		if offset.Length() < pixelsPerDelay {
+			c.pos = vec2.T{c.dest[0], c.dest[1]}
+			break
+		}
+
+		offset.Normalize().Scale(pixelsPerDelay)
+		c.pos.Add(&offset)
+
+		time.Sleep(delay)
+	}
 }
 func (c *GameCard) SetScale(x, y float64) *GameCard {
 	c.sx, c.sy = x, y
@@ -120,10 +147,12 @@ func (c *GameCard) Draw(dst *ebiten.Image) {
 		face = c.Back
 	}
 	flipRatio := math.Min(math.Abs(c.flip-0.5)*2, 1)
+
 	geom := c.geom
 	geom.Rotate(c.r)
 	geom.Scale(c.sx*flipRatio, c.sy)
-	geom.Translate(c.x, c.y)
+	x, y := c.Position()
+	geom.Translate(x, y)
 	dst.DrawImage(face, &ebiten.DrawImageOptions{GeoM: geom})
 }
 
@@ -136,8 +165,9 @@ func ceil(v float64) int {
 
 func (c *GameCard) In(x, y int) bool {
 	chw, chh := cardW/2*c.sx, cardH/2*c.sy
-	minX, minY := floor(c.x-chw), floor(c.y-chh)
-	maxX, maxY := ceil(c.x+chw), ceil(c.y+chh)
+	cx, cy := c.Position()
+	minX, minY := floor(cx-chw), floor(cy-chh)
+	maxX, maxY := ceil(cx+chw), ceil(cy+chh)
 	return x >= minX && x <= maxX && y >= minY && y <= maxY
 }
 
