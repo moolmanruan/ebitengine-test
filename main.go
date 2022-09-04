@@ -43,11 +43,6 @@ func handleMouseClick(g *Game) {
 	}
 
 	x, y := ebiten.CursorPosition()
-	for _, c := range g.cards {
-		if c.In(x, y) {
-			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200, 0)
-		}
-	}
 	if g.deck.Size() > 0 {
 		if g.deck.Card(0).In(x, y) {
 			drawn, newDeck := g.deck.Draw(g.drawAmount)
@@ -67,6 +62,13 @@ func handleMouseClick(g *Game) {
 				c.SetFaceUp(true, flipTime, moveTime+moveDelay-flipTime)
 				g.cards = append(g.cards, c)
 			}
+			return // don't check if other cards were clicked if deck was clicked
+		}
+	}
+
+	for _, c := range g.cards {
+		if c.In(x, y) {
+			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200, 0)
 		}
 	}
 }
