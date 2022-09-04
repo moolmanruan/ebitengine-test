@@ -45,7 +45,7 @@ func handleMouseClick(g *Game) {
 	x, y := ebiten.CursorPosition()
 	for _, c := range g.cards {
 		if c.In(x, y) {
-			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200)
+			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200, 0)
 		}
 	}
 	if g.deck.Size() > 0 {
@@ -53,13 +53,16 @@ func handleMouseClick(g *Game) {
 			drawn, newDeck := g.deck.Draw(g.drawAmount)
 			g.deck = newDeck
 
-			for _, c := range drawn {
+			for ci, c := range drawn {
 				i := len(g.cards)
 				offset := cardSize.Scale(1.1)
 				rowPos, row := i%cardsPerRow, i/cardsPerRow
 				pos := vec2.T{float64(rowPos+1) * offset.X, float64(row) * offset.Y}
-				c.SetPosition(g.deckPos.Added(&pos), 750)
-				c.SetFaceUp(true, time.Millisecond*200)
+				moveDelay := time.Duration(ci) * time.Millisecond * 100
+				moveTime := time.Second
+				c.SetPosition(g.deckPos.Added(&pos), moveTime, moveDelay)
+				flipTime := time.Millisecond * 200
+				c.SetFaceUp(true, flipTime, moveTime+moveDelay-flipTime)
 				g.cards = append(g.cards, c)
 			}
 		}
@@ -136,8 +139,8 @@ func main() {
 	d = d.Shuffle()
 	deckPos := vec2.T{50, 50}
 	for _, c := range d.Cards() {
-		c.SetFaceUp(false, 0)
-		c.SetPosition(deckPos, 0)
+		c.SetFaceUp(false, 0, 0)
+		c.SetPosition(deckPos, 0, 0)
 		c.SetScale(cardScale, cardScale)
 	}
 	game := &Game{

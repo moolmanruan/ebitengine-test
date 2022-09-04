@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/moolmanruan/ebitengine-test/animate"
 	"github.com/moolmanruan/ebitengine-test/deck"
 	"github.com/moolmanruan/ebitengine-test/playingcards"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -41,9 +42,9 @@ type GameCard struct {
 	Back      *ebiten.Image
 	geom      ebiten.GeoM
 	sx, sy, r float64
-	pos, dest vec2.T
+	pos       vec2.T
 	faceDown  bool
-	flip      float64 // Progress of card flip (0:face up -> 1:face down)
+	flipAngle float64 // in radians
 }
 
 func NewGameCard(card playingcards.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
@@ -61,34 +62,12 @@ func (c *GameCard) Position() (x, y float64) {
 	return c.pos[0], c.pos[1]
 }
 
-func (c *GameCard) SetPosition(pos vec2.T, pixelsPerSecond float64) *GameCard {
-	c.dest = pos
-	if pixelsPerSecond > 0 {
-		go animateMove(c, pixelsPerSecond)
-	} else {
-		c.pos = pos
-	}
+func (c *GameCard) SetPosition(pos vec2.T, duration, delay time.Duration) *GameCard {
+	animate.Value(&c.pos[0], pos[0], duration, animate.WithDelay(delay))
+	animate.Value(&c.pos[1], pos[1], duration, animate.WithDelay(delay))
 	return c
 }
 
-func animateMove(c *GameCard, pixelsPerSecond float64) {
-	delay := time.Millisecond * 20
-	delaysPerSecond := 1000 / float64(delay.Milliseconds())
-	pixelsPerDelay := pixelsPerSecond / delaysPerSecond
-
-	for {
-		offset := c.dest.Subed(&c.pos)
-		if offset.Length() < pixelsPerDelay {
-			c.pos = vec2.T{c.dest[0], c.dest[1]}
-			break
-		}
-
-		offset.Normalize().Scale(pixelsPerDelay)
-		c.pos.Add(&offset)
-
-		time.Sleep(delay)
-	}
-}
 func (c *GameCard) SetScale(x, y float64) *GameCard {
 	c.sx, c.sy = x, y
 	return c
@@ -102,51 +81,23 @@ func (c *GameCard) FaceUp() bool {
 	return !c.faceDown
 }
 
-func (c *GameCard) SetFaceUp(up bool, duration time.Duration) *GameCard {
+func (c *GameCard) SetFaceUp(up bool, duration, delay time.Duration) *GameCard {
 	c.faceDown = !up
-	if duration < time.Millisecond {
-		if c.faceDown {
-			c.flip = 1
-		} else {
-			c.flip = 0
-		}
-		return c
-	}
 
-	if c.flip <= 0 || c.flip >= 1 {
-		go animateCardFlip(c, duration)
+	var dest float64
+	if c.faceDown {
+		dest = math.Pi
 	}
+	animate.Value(&c.flipAngle, dest, duration, animate.WithDelay(delay))
 	return c
-}
-
-func animateCardFlip(c *GameCard, duration time.Duration) {
-	delay := time.Millisecond * 20
-	delta := float64(delay.Milliseconds()) / float64(duration.Milliseconds())
-
-	for {
-		if c.faceDown {
-			c.flip += delta
-			if c.flip > 1 {
-				c.flip = 1
-				break
-			}
-		} else {
-			c.flip -= delta
-			if c.flip < 0 {
-				c.flip = 0
-				break
-			}
-		}
-		time.Sleep(delay)
-	}
 }
 
 func (c *GameCard) Draw(dst *ebiten.Image) {
 	face := c.Front
-	if c.flip > 0.5 {
+	if c.flipAngle > math.Pi/2 {
 		face = c.Back
 	}
-	flipRatio := math.Min(math.Abs(c.flip-0.5)*2, 1)
+	flipRatio := math.Cos(c.flipAngle)
 
 	geom := c.geom
 	geom.Rotate(c.r)
