@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/moolmanruan/ebitengine-test/deck"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -30,49 +31,48 @@ func (p Point2D) Scale(v float64) Point2D {
 }
 
 type Game struct {
-	mouseState MouseState           // the mouse state the last time it changed
 	deck       deck.Deck[*GameCard] // the deck of cards to draw from
 	deckPos    vec2.T               // the position of the deck on the screen
 	cards      []*GameCard          // cards that have been drawn from the deck
 	drawAmount int                  // the amount of cards to draw when the deck is clicked
 }
 
-type MouseState struct {
-	position    int
-	leftPressed bool
-	wheelUpDown float64
-}
+func handleMouseClick(g *Game) {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return
+	}
 
-func handleMouseStateChange(g *Game) {
-	if g.mouseState.leftPressed {
-		x, y := ebiten.CursorPosition()
-		for _, c := range g.cards {
-			if c.In(x, y) {
-				c.SetFaceUp(!c.FaceUp(), time.Millisecond*200)
-			}
+	x, y := ebiten.CursorPosition()
+	for _, c := range g.cards {
+		if c.In(x, y) {
+			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200)
 		}
-		if g.deck.Size() > 0 {
-			if g.deck.Card(0).In(x, y) {
-				drawn, newDeck := g.deck.Draw(g.drawAmount)
-				g.deck = newDeck
+	}
+	if g.deck.Size() > 0 {
+		if g.deck.Card(0).In(x, y) {
+			drawn, newDeck := g.deck.Draw(g.drawAmount)
+			g.deck = newDeck
 
-				for _, c := range drawn {
-					i := len(g.cards)
-					offset := cardSize.Scale(1.1)
-					rowPos, row := i%cardsPerRow, i/cardsPerRow
-					pos := vec2.T{float64(rowPos+1) * offset.X, float64(row) * offset.Y}
-					c.SetPosition(g.deckPos.Added(&pos), 750)
-					c.SetFaceUp(true, time.Millisecond*200)
-					g.cards = append(g.cards, c)
-				}
+			for _, c := range drawn {
+				i := len(g.cards)
+				offset := cardSize.Scale(1.1)
+				rowPos, row := i%cardsPerRow, i/cardsPerRow
+				pos := vec2.T{float64(rowPos+1) * offset.X, float64(row) * offset.Y}
+				c.SetPosition(g.deckPos.Added(&pos), 750)
+				c.SetFaceUp(true, time.Millisecond*200)
+				g.cards = append(g.cards, c)
 			}
 		}
 	}
-	if g.mouseState.wheelUpDown > 0 {
+}
+
+func handleMouseWheel(g *Game) {
+	_, w := ebiten.Wheel()
+	if w > 0 {
 		if g.drawAmount < 10 {
 			g.drawAmount++
 		}
-	} else if g.mouseState.wheelUpDown < 0 {
+	} else if w < 0 {
 		if g.drawAmount > 0 {
 			g.drawAmount--
 		}
@@ -80,15 +80,8 @@ func handleMouseStateChange(g *Game) {
 }
 
 func handleMouse(g *Game) {
-	_, wy := ebiten.Wheel()
-	ms := MouseState{
-		leftPressed: ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft),
-		wheelUpDown: wy,
-	}
-	if ms != g.mouseState {
-		g.mouseState = ms
-		handleMouseStateChange(g)
-	}
+	handleMouseClick(g)
+	handleMouseWheel(g)
 }
 
 var (
