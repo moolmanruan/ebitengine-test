@@ -97,11 +97,11 @@ func (c *GameCard) Draw(dst *ebiten.Image) {
 	if c.flipAngle > math.Pi/2 {
 		face = c.Back
 	}
-	flipRatio := math.Cos(c.flipAngle)
+	flipRatio := math.Cos(c.flipAngle) // [-1,1]
 
 	geom := c.geom
 	geom.Rotate(c.r)
-	geom.Scale(c.sx*flipRatio, c.sy)
+	geom.Scale(c.sx*math.Abs(flipRatio), c.sy)
 	x, y := c.Position()
 	geom.Translate(x, y)
 	dst.DrawImage(face, &ebiten.DrawImageOptions{GeoM: geom})
