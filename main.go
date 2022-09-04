@@ -124,6 +124,17 @@ var ErrCloseGame = errors.New("close game")
 
 func (g *Game) Update() error {
 	handleMouse(g)
+	x, y := ebiten.CursorPosition()
+
+	imgIndex := 0
+	if closeBtn.In(x, y) {
+		imgIndex = 1
+	}
+	err := closeBtn.SetActiveImage(imgIndex)
+	if err != nil {
+		return err
+	}
+
 	if g.closeGame {
 		return ErrCloseGame
 	}
@@ -152,7 +163,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 //go:embed resources/ui/close.png
-var closeBtnBytes []byte
+var closeBytes []byte
+
+//go:embed resources/ui/close2.png
+var close2Bytes []byte
 
 var closeBtn *sprite.Sprite
 
@@ -172,10 +186,11 @@ func main() {
 	}
 
 	var err error
-	closeBtn, err = sprite.NewFromBytes(closeBtnBytes)
+	closeBtn, err = sprite.NewFromBytes(closeBytes)
 	if err != nil {
 		log.Fatal(err)
 	}
+	closeBtn.AddImageFromBytes(close2Bytes)
 	closeBtn.SetPosition(screenWidth-20-5, 5)
 	closeBtn.SetSize(20, 20)
 

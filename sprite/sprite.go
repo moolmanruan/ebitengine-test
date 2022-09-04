@@ -2,35 +2,36 @@ package sprite
 
 import (
 	"bytes"
+	"errors"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
 
 type Sprite struct {
-	img      *ebiten.Image
-	drawOpts *ebiten.DrawImageOptions
-	px, py   float64
-	sx, sy   float64
+	images    []*ebiten.Image
+	activeImg int
+	drawOpts  *ebiten.DrawImageOptions
+	px, py    float64
+	sx, sy    float64
 }
 
-func NewFromBytes(bb []byte) (*Sprite, error) {
-	img, _, err := image.Decode(bytes.NewReader(bb))
+func NewFromBytes(imgBytes []byte) (*Sprite, error) {
+	img, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
 		return nil, err
 	}
-	return NewFromImage(img), nil
+	return New(img), nil
 }
 
-func NewFromImage(img image.Image) *Sprite {
-	s := &Sprite{
-		img: ebiten.NewImageFromImage(img),
-	}
+func New(img image.Image) *Sprite {
+	s := new(Sprite)
+	s.AddImage(img)
 	s.recalculateDrawOpts()
 	return s
 }
 
 func (s *Sprite) Draw(dst *ebiten.Image) {
-	dst.DrawImage(s.img, s.drawOpts)
+	dst.DrawImage(s.images[s.activeImg], s.drawOpts)
 }
 
 func (s *Sprite) recalculateDrawOpts() {
@@ -38,6 +39,26 @@ func (s *Sprite) recalculateDrawOpts() {
 	g.Scale(s.sx, s.sy)
 	g.Translate(s.px, s.py)
 	s.drawOpts = &ebiten.DrawImageOptions{GeoM: g}
+}
+
+func (s *Sprite) AddImageFromBytes(imgBytes []byte) error {
+	img, _, err := image.Decode(bytes.NewReader(imgBytes))
+	if err != nil {
+		return err
+	}
+	s.AddImage(img)
+	return nil
+}
+
+func (s *Sprite) AddImage(img image.Image) {
+	s.images = append(s.images, ebiten.NewImageFromImage(img))
+}
+func (s *Sprite) SetActiveImage(index int) error {
+	if index < 0 || index >= len(s.images) {
+		return errors.New("index out of bounds")
+	}
+	s.activeImg = index
+	return nil
 }
 
 func (s *Sprite) SetPosition(x, y float64) {
@@ -51,14 +72,14 @@ func (s *Sprite) SetScale(x, y float64) {
 }
 
 func (s *Sprite) SetSize(x, y float64) {
-	w, h := s.img.Size()
+	w, h := s.images[0].Size()
 	s.SetScale(x/float64(w), y/float64(h))
 }
 
 // In indicates whether the given screen coordinates are in the Sprite's rectangle.
 func (s *Sprite) In(x, y int) bool {
 	xf, yf := float64(x), float64(y)
-	w, h := s.img.Size()
+	w, h := s.images[0].Size()
 	xMin, xMax := s.px, s.px+float64(w)*s.sx
 	yMin, yMax := s.py, s.py+float64(h)*s.sy
 	return xf >= xMin && xf <= xMax && yf >= yMin && yf <= yMax
