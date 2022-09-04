@@ -4,8 +4,8 @@ import (
 	"bytes"
 	_ "embed"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/moolmanruan/ebitengine-test/card"
 	"github.com/moolmanruan/ebitengine-test/deck"
+	"github.com/moolmanruan/ebitengine-test/playingcards"
 	"github.com/ungerik/go3d/float64/vec2"
 	"image"
 	"log"
@@ -28,15 +28,15 @@ func loadCardsImage() {
 	cardsImage = ebiten.NewImageFromImage(img)
 }
 
-var suitIndex = map[card.Suit]int{
-	card.Hearts:   0,
-	card.Diamonds: 1,
-	card.Clubs:    2,
-	card.Spades:   3,
+var suitIndex = map[playingcards.Suit]int{
+	playingcards.Hearts:   0,
+	playingcards.Diamonds: 1,
+	playingcards.Clubs:    2,
+	playingcards.Spades:   3,
 }
 
 type GameCard struct {
-	card.Card
+	playingcards.Card
 	Front     *ebiten.Image
 	Back      *ebiten.Image
 	geom      ebiten.GeoM
@@ -46,7 +46,7 @@ type GameCard struct {
 	flip      float64 // Progress of card flip (0:face up -> 1:face down)
 }
 
-func NewGameCard(card card.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
+func NewGameCard(card playingcards.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
 	geom := ebiten.GeoM{}
 	geom.Translate(-cardW/2, -cardH/2)
 	return &GameCard{
@@ -174,7 +174,7 @@ func (c *GameCard) In(x, y int) bool {
 func setupDeck() deck.Deck[*GameCard] {
 	loadCardsImage()
 
-	standardCards := card.StandardDeck()
+	standardCards := playingcards.StandardDeck()
 	cc := make([]*GameCard, len(standardCards))
 
 	for i, c := range standardCards {
@@ -185,7 +185,7 @@ func setupDeck() deck.Deck[*GameCard] {
 	return deck.New(cc)
 }
 
-func cardImage(card card.Card) *ebiten.Image {
+func cardImage(card playingcards.Card) *ebiten.Image {
 	x := int(card.Face) * cardW
 	y := suitIndex[card.Suit] * cardH
 	return cardsImage.SubImage(image.Rect(x, y, x+cardW, y+cardH)).(*ebiten.Image)

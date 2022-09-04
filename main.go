@@ -68,11 +68,12 @@ func handleMouseClick(g *Game) {
 
 func handleMouseWheel(g *Game) {
 	_, w := ebiten.Wheel()
-	if w > 0 {
+	switch {
+	case w > 0:
 		if g.drawAmount < 10 {
 			g.drawAmount++
 		}
-	} else if w < 0 {
+	case w < 0:
 		if g.drawAmount > 0 {
 			g.drawAmount--
 		}

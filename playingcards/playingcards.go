@@ -1,4 +1,4 @@
-package card
+package playingcards
 
 type Suit int
 
