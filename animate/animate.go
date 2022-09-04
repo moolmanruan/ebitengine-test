@@ -61,32 +61,39 @@ func WithDelay(d time.Duration) Option {
 // from and to are the start and endpoints of the animation
 // duration is the duration of the animation
 // interval is the time between updates
-func Value(value *float64, to float64, duration time.Duration, opts ...Option) {
+func Value(value *float64, to float64, duration time.Duration, opts ...Option) (cancel func()) {
 	oo := defaultOptions()
 	for _, o := range opts {
 		o(&oo)
 	}
 	if duration.Nanoseconds() == 0 {
 		*value = to
-		return
+		return nil
 	}
-	go animate(value, to, duration, oo)
+	var stop bool
+	go animate(value, to, duration, &stop, oo)
+	return func() { stop = true }
 }
 
-func animate(value *float64, to float64, duration time.Duration, opts options) {
+func animate(value *float64, to float64, duration time.Duration, stop *bool, opts options) {
 	startTime := time.Now().Add(opts.delay)
 	from := *value // copy start value
 	valueRange := to - from
 	for {
+		if *stop {
+			return
+		}
+
 		runTime := time.Since(startTime)
 		if runTime < 0 {
 			time.Sleep(opts.internal)
 			continue
 		}
+
 		progress := float64(runTime.Nanoseconds()) / float64(duration.Nanoseconds())
 		if progress >= 1 {
 			*value = to
-			break
+			return
 		}
 		*value = from + progress*valueRange
 		time.Sleep(opts.internal)

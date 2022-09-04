@@ -38,13 +38,14 @@ var suitIndex = map[playingcards.Suit]int{
 
 type GameCard struct {
 	playingcards.Card
-	Front     *ebiten.Image
-	Back      *ebiten.Image
-	geom      ebiten.GeoM
-	sx, sy, r float64
-	pos       vec2.T
-	faceDown  bool
-	flipAngle float64 // in radians
+	Front      *ebiten.Image
+	Back       *ebiten.Image
+	geom       ebiten.GeoM
+	sx, sy, r  float64
+	pos        vec2.T
+	faceDown   bool
+	flipAngle  float64 // in radians
+	cancelFlip func()
 }
 
 func NewGameCard(card playingcards.Card, frontFace *ebiten.Image, backFace *ebiten.Image) *GameCard {
@@ -83,12 +84,14 @@ func (c *GameCard) FaceUp() bool {
 
 func (c *GameCard) SetFaceUp(up bool, duration, delay time.Duration) *GameCard {
 	c.faceDown = !up
-
 	var dest float64
 	if c.faceDown {
 		dest = math.Pi
 	}
-	animate.Value(&c.flipAngle, dest, duration, animate.WithDelay(delay))
+	if c.cancelFlip != nil {
+		c.cancelFlip()
+	}
+	c.cancelFlip = animate.Value(&c.flipAngle, dest, duration, animate.WithDelay(delay))
 	return c
 }
 

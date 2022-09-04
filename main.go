@@ -58,9 +58,11 @@ func handleMouseClick(g *Game) {
 				offset := cardSize.Scale(1.1)
 				rowPos, row := i%cardsPerRow, i/cardsPerRow
 				pos := vec2.T{float64(rowPos+1) * offset.X, float64(row) * offset.Y}
+
 				moveDelay := time.Duration(ci) * time.Millisecond * 100
 				moveTime := time.Second
 				c.SetPosition(g.deckPos.Added(&pos), moveTime, moveDelay)
+
 				flipTime := time.Millisecond * 200
 				c.SetFaceUp(true, flipTime, moveTime+moveDelay-flipTime)
 				g.cards = append(g.cards, c)
