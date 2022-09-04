@@ -2,12 +2,14 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/moolmanruan/ebitengine-test/deck"
+	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/ungerik/go3d/float64/vec2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -35,6 +37,7 @@ type Game struct {
 	deckPos    vec2.T               // the position of the deck on the screen
 	cards      []*GameCard          // cards that have been drawn from the deck
 	drawAmount int                  // the amount of cards to draw when the deck is clicked
+	closeGame  bool                 // boolean indicating that the game should be closed
 }
 
 func handleMouseClick(g *Game) {
@@ -69,7 +72,11 @@ func handleMouseClick(g *Game) {
 	for _, c := range g.cards {
 		if c.In(x, y) {
 			c.SetFaceUp(!c.FaceUp(), time.Millisecond*200, 0)
+			return // only handle a single card click
 		}
+	}
+	if closeBtn.In(x, y) {
+		g.closeGame = true
 	}
 }
 
@@ -113,8 +120,13 @@ func init() {
 	}
 }
 
+var ErrCloseGame = errors.New("close game")
+
 func (g *Game) Update() error {
 	handleMouse(g)
+	if g.closeGame {
+		return ErrCloseGame
+	}
 	return nil
 }
 
@@ -132,11 +144,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, c := range g.cards {
 		c.Draw(screen)
 	}
+	closeBtn.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
+
+//go:embed resources/ui/close.png
+var closeBtnBytes []byte
+
+var closeBtn *sprite.Sprite
 
 func main() {
 	d := setupDeck()
@@ -153,9 +171,19 @@ func main() {
 		drawAmount: 2,
 	}
 
+	var err error
+	closeBtn, err = sprite.NewFromBytes(closeBtnBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	closeBtn.SetPosition(screenWidth-20-5, 5)
+	closeBtn.SetSize(20, 20)
+
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Card draw")
-	if err := ebiten.RunGame(game); err != nil {
-		log.Fatal(err)
+	if err = ebiten.RunGame(game); err != nil {
+		if !errors.Is(err, ErrCloseGame) {
+			log.Fatal(err)
+		}
 	}
 }
