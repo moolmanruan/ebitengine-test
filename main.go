@@ -11,6 +11,7 @@ import (
 	"github.com/moolmanruan/ebitengine-test/deck"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/moolmanruan/ebitengine-test/ui/button"
+	"github.com/moolmanruan/ebitengine-test/ui/dialog"
 	"github.com/ungerik/go3d/float64/vec2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -152,6 +153,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		c.Draw(screen)
 	}
 	closeBtn.Draw(screen)
+	mainDialog.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -177,6 +179,20 @@ func loadCloseSprite() error {
 	return nil
 }
 
+//go:embed resources/ui/dialog.png
+var dialogBytes []byte
+
+var mainDialog *dialog.T
+
+func loadDialog() error {
+	img, err := sprite.ImageFromBytes(dialogBytes)
+	if err != nil {
+		return err
+	}
+	mainDialog = dialog.New(img, 8, 8, 8, 8)
+	return nil
+}
+
 func main() {
 	d, err := setupDeck()
 	if err != nil {
@@ -197,6 +213,9 @@ func main() {
 	}
 
 	if err = loadCloseSprite(); err != nil {
+		log.Fatal(err)
+	}
+	if err = loadDialog(); err != nil {
 		log.Fatal(err)
 	}
 

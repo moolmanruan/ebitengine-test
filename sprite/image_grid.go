@@ -32,6 +32,26 @@ func NewImageGrid(img image.Image, x, y int) ImageGrid {
 	return ImageGrid{rows: rows, cols: cols, ii: ii}
 }
 
+func NewImageGrid3x3(img image.Image, top, bottom, left, right int) ImageGrid {
+	eImg := ebiten.NewImageFromImage(img)
+	w, h := eImg.Size()
+
+	ii := make([]image.Image, 9)
+
+	ii[0] = eImg.SubImage(image.Rect(0, 0, left, top))
+	ii[1] = eImg.SubImage(image.Rect(left, 0, w-right, top))
+	ii[2] = eImg.SubImage(image.Rect(w-right, 0, right, top))
+
+	ii[3] = eImg.SubImage(image.Rect(0, top, left, h-bottom))
+	ii[4] = eImg.SubImage(image.Rect(left, top, w-right, h-bottom))
+	ii[5] = eImg.SubImage(image.Rect(w-right, top, right, h-bottom))
+
+	ii[6] = eImg.SubImage(image.Rect(0, h-bottom, left, bottom))
+	ii[7] = eImg.SubImage(image.Rect(left, h-bottom, w-right, bottom))
+	ii[8] = eImg.SubImage(image.Rect(w-right, h-bottom, right, bottom))
+	return ImageGrid{rows: 3, cols: 3, ii: ii}
+}
+
 func (g ImageGrid) List() []image.Image {
 	return g.ii
 }
