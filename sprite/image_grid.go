@@ -36,9 +36,9 @@ func (g ImageGrid) List() []image.Image {
 	return g.ii
 }
 
-func (g ImageGrid) ImageAt(x, y int) (image.Image, error) {
+func (g ImageGrid) ImageAt(x, y int) image.Image {
 	if x < 0 || x >= g.cols || y < 0 || y >= g.rows {
-		return nil, nil
+		return nil
 	}
-	return g.ii[x+y*g.cols], nil
+	return g.ii[x+y*g.cols]
 }

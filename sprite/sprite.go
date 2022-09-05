@@ -50,6 +50,10 @@ func (s *Sprite) AddImage(img image.Image) {
 	s.images = append(s.images, ebiten.NewImageFromImage(img))
 }
 
+func (s *Sprite) NumImages() int {
+	return len(s.images)
+}
+
 func (s *Sprite) SetActiveImage(index int) error {
 	if index < 0 || index >= len(s.images) {
 		return errors.New("index out of bounds")

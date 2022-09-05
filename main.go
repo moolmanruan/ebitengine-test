@@ -10,6 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/moolmanruan/ebitengine-test/deck"
 	"github.com/moolmanruan/ebitengine-test/sprite"
+	"github.com/moolmanruan/ebitengine-test/ui/button"
 	"github.com/ungerik/go3d/float64/vec2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -125,12 +126,7 @@ var ErrCloseGame = errors.New("close game")
 func (g *Game) Update() error {
 	handleMouse(g)
 	x, y := ebiten.CursorPosition()
-
-	imgIndex := 0
-	if closeBtn.In(x, y) {
-		imgIndex = 1
-	}
-	err := closeBtn.SetActiveImage(imgIndex)
+	err := closeBtn.SetHover(closeBtn.In(x, y))
 	if err != nil {
 		return err
 	}
@@ -165,7 +161,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 //go:embed resources/ui/close.png
 var closeBytes []byte
 
-var closeBtn *sprite.Sprite
+var closeBtn *button.T
 
 func loadCloseSprite() error {
 	closeImg, err := sprite.ImageFromBytes(closeBytes)
@@ -173,9 +169,11 @@ func loadCloseSprite() error {
 		return err
 	}
 	closeImages := sprite.NewImageGrid(closeImg, 16, 16)
-	closeBtn = sprite.New(closeImages.List()...)
-	closeBtn.SetPosition(screenWidth-32-5, 5)
-	closeBtn.SetSize(32, 32)
+	closeBtn = button.New(
+		closeImages.ImageAt(0, 0),
+		button.WithHoverImage(closeImages.ImageAt(1, 0)),
+		button.WithAbsolutePosition(screenWidth-32-5, 5),
+		button.WithSize(32, 32))
 	return nil
 }
 
