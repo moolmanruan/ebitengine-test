@@ -167,6 +167,18 @@ var closeBytes []byte
 
 var closeBtn *sprite.Sprite
 
+func loadCloseSprite() error {
+	closeImg, err := sprite.ImageFromBytes(closeBytes)
+	if err != nil {
+		return err
+	}
+	closeImages := sprite.ExtractSubImageTiles(closeImg, 16, 16)
+	closeBtn = sprite.New(closeImages...)
+	closeBtn.SetPosition(screenWidth-32-5, 5)
+	closeBtn.SetSize(32, 32)
+	return nil
+}
+
 func main() {
 	d := setupDeck()
 	d = d.Shuffle()
@@ -182,17 +194,13 @@ func main() {
 		drawAmount: 2,
 	}
 
-	var err error
-	closeBtn, err = sprite.NewFromBytes(closeBytes, 2, 1)
-	if err != nil {
+	if err := loadCloseSprite(); err != nil {
 		log.Fatal(err)
 	}
-	closeBtn.SetPosition(screenWidth-32-5, 5)
-	closeBtn.SetSize(32, 32)
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Card draw")
-	if err = ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(game); err != nil {
 		if !errors.Is(err, ErrCloseGame) {
 			log.Fatal(err)
 		}
