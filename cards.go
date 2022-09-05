@@ -1,15 +1,13 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/moolmanruan/ebitengine-test/animate"
 	"github.com/moolmanruan/ebitengine-test/deck"
 	"github.com/moolmanruan/ebitengine-test/playingcards"
+	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/ungerik/go3d/float64/vec2"
-	"image"
-	"log"
 	"math"
 	"time"
 )
@@ -18,16 +16,6 @@ import (
 var cardsImageBytes []byte
 
 const cardW, cardH = 17, 26
-
-var cardsImage *ebiten.Image
-
-func loadCardsImage() {
-	img, _, err := image.Decode(bytes.NewReader(cardsImageBytes))
-	if err != nil {
-		log.Fatal(err)
-	}
-	cardsImage = ebiten.NewImageFromImage(img)
-}
 
 var suitIndex = map[playingcards.Suit]int{
 	playingcards.Hearts:   0,
@@ -125,27 +113,28 @@ func (c *GameCard) In(x, y int) bool {
 	return x >= minX && x <= maxX && y >= minY && y <= maxY
 }
 
-func setupDeck() deck.Deck[*GameCard] {
-	loadCardsImage()
+func setupDeck() (deck.Deck[*GameCard], error) {
+	img, err := sprite.ImageFromBytes(cardsImageBytes)
+	if err != nil {
+		return deck.Deck[*GameCard]{}, err
+	}
+	cardImgGrid := sprite.NewImageGrid(img, cardW, cardH)
+	cardBack, err := cardImgGrid.ImageAt(0, 4)
+	if err != nil {
+		return deck.Deck[*GameCard]{}, err
+	}
 
 	standardCards := playingcards.StandardDeck()
+
 	cc := make([]*GameCard, len(standardCards))
-
 	for i, c := range standardCards {
+		card, err := cardImgGrid.ImageAt(int(c.Face), int(c.Suit)-1)
+		if err != nil {
+			return deck.Deck[*GameCard]{}, err
+		}
 		cc[i] = NewGameCard(c,
-			cardImage(c),
-			cardBack(0))
+			ebiten.NewImageFromImage(card),
+			ebiten.NewImageFromImage(cardBack))
 	}
-	return deck.New(cc)
-}
-
-func cardImage(card playingcards.Card) *ebiten.Image {
-	x := int(card.Face) * cardW
-	y := suitIndex[card.Suit] * cardH
-	return cardsImage.SubImage(image.Rect(x, y, x+cardW, y+cardH)).(*ebiten.Image)
-}
-func cardBack(version int) *ebiten.Image {
-	x := version * cardW
-	y := 4 * cardH
-	return cardsImage.SubImage(image.Rect(x, y, x+cardW, y+cardH)).(*ebiten.Image)
+	return deck.New(cc), nil
 }

@@ -172,16 +172,20 @@ func loadCloseSprite() error {
 	if err != nil {
 		return err
 	}
-	closeImages := sprite.ExtractSubImageTiles(closeImg, 16, 16)
-	closeBtn = sprite.New(closeImages...)
+	closeImages := sprite.NewImageGrid(closeImg, 16, 16)
+	closeBtn = sprite.New(closeImages.List()...)
 	closeBtn.SetPosition(screenWidth-32-5, 5)
 	closeBtn.SetSize(32, 32)
 	return nil
 }
 
 func main() {
-	d := setupDeck()
+	d, err := setupDeck()
+	if err != nil {
+		log.Fatal(err)
+	}
 	d = d.Shuffle()
+
 	deckPos := vec2.T{50, 50}
 	for _, c := range d.Cards() {
 		c.SetFaceUp(false, 0, 0)
@@ -194,13 +198,13 @@ func main() {
 		drawAmount: 2,
 	}
 
-	if err := loadCloseSprite(); err != nil {
+	if err = loadCloseSprite(); err != nil {
 		log.Fatal(err)
 	}
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Card draw")
-	if err := ebiten.RunGame(game); err != nil {
+	if err = ebiten.RunGame(game); err != nil {
 		if !errors.Is(err, ErrCloseGame) {
 			log.Fatal(err)
 		}
