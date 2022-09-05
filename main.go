@@ -165,9 +165,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 //go:embed resources/ui/close.png
 var closeBytes []byte
 
-//go:embed resources/ui/close2.png
-var close2Bytes []byte
-
 var closeBtn *sprite.Sprite
 
 func main() {
@@ -186,13 +183,12 @@ func main() {
 	}
 
 	var err error
-	closeBtn, err = sprite.NewFromBytes(closeBytes)
+	closeBtn, err = sprite.NewFromBytes(closeBytes, 2, 1)
 	if err != nil {
 		log.Fatal(err)
 	}
-	closeBtn.AddImageFromBytes(close2Bytes)
-	closeBtn.SetPosition(screenWidth-20-5, 5)
-	closeBtn.SetSize(20, 20)
+	closeBtn.SetPosition(screenWidth-32-5, 5)
+	closeBtn.SetSize(32, 32)
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Card draw")

@@ -15,18 +15,20 @@ type Sprite struct {
 	sx, sy    float64
 }
 
-func NewFromBytes(imgBytes []byte) (*Sprite, error) {
+func NewFromBytes(imgBytes []byte, xTile, yTile int) (*Sprite, error) {
 	img, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
 		return nil, err
 	}
-	return New(img), nil
+	return New(img, xTile, yTile), nil
 }
 
-func New(img image.Image) *Sprite {
-	s := new(Sprite)
-	s.AddImage(img)
+func New(img image.Image, xTile, yTile int) *Sprite {
+	s := &Sprite{
+		sx: 1, sy: 1,
+	}
 	s.recalculateDrawOpts()
+	s.AddImage(img, xTile, yTile)
 	return s
 }
 
@@ -41,17 +43,27 @@ func (s *Sprite) recalculateDrawOpts() {
 	s.drawOpts = &ebiten.DrawImageOptions{GeoM: g}
 }
 
-func (s *Sprite) AddImageFromBytes(imgBytes []byte) error {
+func (s *Sprite) AddImageFromBytes(imgBytes []byte, xTile, yTile int) error {
 	img, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
 		return err
 	}
-	s.AddImage(img)
+	s.AddImage(img, xTile, yTile)
 	return nil
 }
 
-func (s *Sprite) AddImage(img image.Image) {
-	s.images = append(s.images, ebiten.NewImageFromImage(img))
+func (s *Sprite) AddImage(img image.Image, xTile, yTile int) {
+	eImg := ebiten.NewImageFromImage(img)
+	dx := img.Bounds().Size().X / xTile
+	dy := img.Bounds().Size().Y / yTile
+
+	for xi := 0; xi < xTile; xi++ {
+		for yi := 0; yi < yTile; yi++ {
+			si := eImg.SubImage(image.Rect(xi*dx, yi*dx, (xi+1)*dx, (yi+1)*dy))
+			s.images = append(s.images, ebiten.NewImageFromImage(si))
+		}
+	}
+
 }
 func (s *Sprite) SetActiveImage(index int) error {
 	if index < 0 || index >= len(s.images) {
