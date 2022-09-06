@@ -1,6 +1,7 @@
 package animate
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -33,6 +34,7 @@ var FPS60Interval = time.Second / 60
 var FPS30Interval = time.Second / 30
 
 type options struct {
+	duration time.Duration
 	interval time.Duration
 	delay    time.Duration
 }
@@ -45,6 +47,11 @@ func defaultOptions() options {
 
 type Option func(opts *options)
 
+func WithDuration(d time.Duration) Option {
+	return func(opts *options) {
+		opts.duration = d
+	}
+}
 func WithInterval(i time.Duration) Option {
 	return func(opts *options) {
 		opts.interval = i
@@ -61,42 +68,48 @@ func WithDelay(d time.Duration) Option {
 // from and to are the start and endpoints of the animation
 // duration is the duration of the animation
 // interval is the time between updates
-func Int(update func(int), from, to int, duration time.Duration, opts ...Option) (cancel func()) {
+func Int(update func(int), from, to int, opts ...Option) (cancel func()) {
 	oo := defaultOptions()
 	for _, o := range opts {
 		o(&oo)
 	}
-	if duration.Nanoseconds() <= 0 {
-		update(to)
+	if oo.interval <= 0 {
+		fmt.Println("Interval for Int animation not specified")
 		return nil
 	}
+	// Hide for now, need to think how I will do infinite
+	//if duration.Nanoseconds() <= 0 {
+	//	update(to)
+	//	return nil
+	//}
 	var stop bool
-	go animateInt(update, from, to, duration, &stop, oo)
+	go animateInt(update, from, to, &stop, oo)
 	return func() { stop = true }
 }
 
-func animateInt(update func(int), from, to int, duration time.Duration, stop *bool, opts options) {
-	startTime := time.Now().Add(opts.delay)
+func animateInt(update func(int), from, to int, stop *bool, opts options) {
+	//startTime := time.Now().Add(opts.delay)
 	value := from
+	time.Sleep(opts.delay)
 	for {
 		if *stop {
 			return
 		}
 
-		runTime := time.Since(startTime)
-		if runTime < 0 {
-			time.Sleep(opts.interval)
-			continue
-		}
-
-		if duration.Nanoseconds() > 0 {
-			progress := float64(runTime.Nanoseconds()) / float64(duration.Nanoseconds())
-			if progress >= 1 {
-				value = to
-				update(value)
-				return
-			}
-		}
+		//runTime := time.Since(startTime)
+		//if runTime < 0 {
+		//	time.Sleep(opts.interval)
+		//	continue
+		//}
+		//
+		//if duration.Nanoseconds() > 0 {
+		//	progress := float64(runTime.Nanoseconds()) / float64(duration.Nanoseconds())
+		//	if progress >= 1 {
+		//		value = to
+		//		update(value)
+		//		return
+		//	}
+		//}
 
 		value++
 		if value > to {

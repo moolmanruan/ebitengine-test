@@ -22,12 +22,12 @@ func NewAnimated(imgs []image.Image, interval time.Duration) *AnimatedSprite {
 
 func (s *AnimatedSprite) Play() {
 	s.Pause()
-	s.stop = animate.Int(func(v int) {
-		err := s.SetActiveImage(v)
+	s.stop = animate.Int(func(newImage int) {
+		err := s.SetActiveImage(newImage)
 		if err != nil {
 			fmt.Println("error setting active image", err.Error())
 		}
-	}, 0, s.NumImages()-1, s.interval*time.Duration(s.NumImages()), animate.WithInterval(s.interval))
+	}, 0, s.NumImages()-1, animate.WithInterval(s.interval))
 }
 
 func (s *AnimatedSprite) Pause() {
