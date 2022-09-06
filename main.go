@@ -80,6 +80,9 @@ func handleMouseClick(g *Game) {
 	if closeBtn.In(x, y) {
 		g.closeGame = true
 	}
+	if closeAnim.In(x, y) {
+		closeAnim.Play()
+	}
 }
 
 func handleMouseWheel(g *Game) {
@@ -154,6 +157,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	closeBtn.Draw(screen)
 	mainDialog.Draw(screen)
+	closeAnim.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -164,6 +168,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 var closeBytes []byte
 
 var closeBtn *button.T
+var closeAnim *sprite.AnimatedSprite
 
 func loadCloseSprite() error {
 	closeImg, err := sprite.ImageFromBytes(closeBytes)
@@ -176,6 +181,11 @@ func loadCloseSprite() error {
 		button.WithHoverImage(closeImages.ImageAt(1, 0)),
 		button.WithAbsolutePosition(screenWidth-32-5, 5),
 		button.WithSize(32, 32))
+
+	closeAnim = sprite.NewAnimated(
+		closeImages.List(),
+		time.Second)
+	closeAnim.SetPosition(50, 200)
 	return nil
 }
 

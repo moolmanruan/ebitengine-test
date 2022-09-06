@@ -62,6 +62,10 @@ func (s *Sprite) SetActiveImage(index int) error {
 	return nil
 }
 
+func (s *Sprite) ActiveImage() int {
+	return s.activeImg
+}
+
 func (s *Sprite) SetPosition(x, y float64) {
 	s.px, s.py = x, y
 	s.recalculateDrawOpts()
