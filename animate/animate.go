@@ -1,16 +1,10 @@
 package animate
 
 import (
-	"fmt"
 	"time"
 )
 
 //@keyframes
-//cancel - channel
-//duration - time.Duration
-//delay - duration (pos or negative)
-//iteration-count
-// - number
 //direction
 // - normal - The animation is played as normal (forwards). This is default
 // - reverse - The animation is played in reverse direction (backwards)
@@ -24,39 +18,44 @@ import (
 // - ease-in-out - Specifies an animation with a slow start and end
 // - cubic-bezier(n,n,n,n) - Lets you define your own values in a cubic-bezier function
 
-//*value
-//from
-//to
-
-// a cancel channel is returned - (cancel chan struct{})
-
 var FPS60Interval = time.Second / 60
 var FPS30Interval = time.Second / 30
 
 type options struct {
-	duration time.Duration
-	interval time.Duration
-	delay    time.Duration
+	iterations int
+	interval   time.Duration
+	delay      time.Duration
 }
 
 func defaultOptions() options {
 	return options{
-		interval: FPS60Interval,
+		iterations: 1,
+		interval:   FPS60Interval,
 	}
 }
 
 type Option func(opts *options)
 
-func WithDuration(d time.Duration) Option {
+// WithIterations sets the amount of times the value will be animated from
+// start to finish before stopping. Setting a value of 0 will make the animation
+// run forever.
+func WithIterations(i int) Option {
 	return func(opts *options) {
-		opts.duration = d
+		opts.iterations = i
 	}
 }
+
+// WithInterval is the interval at which float values should be updated during
+// an animation.
 func WithInterval(i time.Duration) Option {
 	return func(opts *options) {
 		opts.interval = i
 	}
 }
+
+// WithDelay is the time an animation should wait before starting to play after
+// the animation was started.
+// TODO: Support negative durations
 func WithDelay(d time.Duration) Option {
 	return func(opts *options) {
 		opts.delay = d
@@ -66,31 +65,38 @@ func WithDelay(d time.Duration) Option {
 // Int a value from one value to another.
 // value is a pointer to the value that will be animated
 // from and to are the start and endpoints of the animation
-// duration is the duration of the animation
-// interval is the time between updates
-func Int(update func(int), from, to int, opts ...Option) (cancel func()) {
+// The duration is the duration of the animation.
+// The interval is ignored for Int animations.
+func Int(update func(int), from, to int, duration time.Duration, opts ...Option) (cancel func()) {
+	if duration.Nanoseconds() == 0 {
+		update(to)
+		return nil
+	}
+
 	oo := defaultOptions()
 	for _, o := range opts {
 		o(&oo)
 	}
-	if oo.interval <= 0 {
-		fmt.Println("Interval for Int animation not specified")
-		return nil
-	}
-	// Hide for now, need to think how I will do infinite
-	//if duration.Nanoseconds() <= 0 {
-	//	update(to)
-	//	return nil
-	//}
+
 	var stop bool
-	go animateInt(update, from, to, &stop, oo)
+	go animateInt(update, from, to, &stop, duration, oo)
 	return func() { stop = true }
 }
 
-func animateInt(update func(int), from, to int, stop *bool, opts options) {
+func abs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
+func animateInt(update func(int), from, to int, stop *bool, duration time.Duration, opts options) {
 	//startTime := time.Now().Add(opts.delay)
 	value := from
 	time.Sleep(opts.delay)
+	steps := abs(to-from) + 1
+	interval := duration / time.Duration(steps)
+	var iterCount int
 	for {
 		if *stop {
 			return
@@ -114,9 +120,15 @@ func animateInt(update func(int), from, to int, stop *bool, opts options) {
 		value++
 		if value > to {
 			value = from
+			iterCount++
 		}
 		update(value)
-		time.Sleep(opts.interval)
+
+		// break if number of iterations reached
+		if opts.iterations > 0 && iterCount == opts.iterations {
+			return
+		}
+		time.Sleep(interval)
 	}
 }
 

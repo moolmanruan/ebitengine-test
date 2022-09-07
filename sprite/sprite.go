@@ -46,8 +46,9 @@ func (s *Sprite) AddImageFromBytes(imgBytes []byte) error {
 	return nil
 }
 
-func (s *Sprite) AddImage(img image.Image) {
+func (s *Sprite) AddImage(img image.Image) int {
 	s.images = append(s.images, ebiten.NewImageFromImage(img))
+	return len(s.images) - 1
 }
 
 func (s *Sprite) NumImages() int {

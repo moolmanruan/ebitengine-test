@@ -9,28 +9,29 @@ import (
 
 type AnimatedSprite struct {
 	*Sprite
-	stop     func()
-	interval time.Duration
+	stop func()
 }
 
-func NewAnimated(imgs []image.Image, interval time.Duration) *AnimatedSprite {
+func NewAnimated(imgs []image.Image) *AnimatedSprite {
 	return &AnimatedSprite{
-		Sprite:   New(imgs...),
-		interval: interval,
+		Sprite: New(imgs...),
 	}
 }
+func (s *AnimatedSprite) Playing() bool {
+	return s.stop != nil
+}
 
-func (s *AnimatedSprite) Play() {
-	s.Pause()
+func (s *AnimatedSprite) Play(duration time.Duration, opts ...animate.Option) {
+	s.Stop()
 	s.stop = animate.Int(func(newImage int) {
 		err := s.SetActiveImage(newImage)
 		if err != nil {
 			fmt.Println("error setting active image", err.Error())
 		}
-	}, 0, s.NumImages()-1, animate.WithInterval(s.interval))
+	}, 0, s.NumImages()-1, duration, opts...)
 }
 
-func (s *AnimatedSprite) Pause() {
+func (s *AnimatedSprite) Stop() {
 	if s.stop != nil {
 		s.stop()
 		s.stop = nil

@@ -1,7 +1,7 @@
 package fsm
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
+	"fmt"
 	"github.com/moolmanruan/ebitengine-test/fsm"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"golang.org/x/exp/constraints"
@@ -9,49 +9,45 @@ import (
 )
 
 type FSMSprite[T constraints.Integer] struct {
-	sm      *fsm.StateMachine[T]
-	sprites map[T]*sprite.Sprite
+	*sprite.Sprite
+	sm             *fsm.FSM[T]
+	stateSpriteIdx map[T]int
 }
 
 func New[T constraints.Integer]() *FSMSprite[T] {
 	return &FSMSprite[T]{
-		sm:      fsm.New[T](),
-		sprites: make(map[T]*sprite.Sprite, 0),
+		Sprite:         sprite.New(),
+		sm:             fsm.New[T](),
+		stateSpriteIdx: make(map[T]int, 0),
 	}
 }
 
 func (s *FSMSprite[T]) AddState(state T, image image.Image) *FSMSprite[T] {
 	s.sm.AddState(state)
-	s.sprites[state] = sprite.New(image)
+	s.stateSpriteIdx[state] = s.AddImage(image)
+	return s
+}
+
+func (s *FSMSprite[T]) AddTransition(from, to T) *FSMSprite[T] {
+	s.sm.AddTransition(from, to)
+	return s
+}
+
+func (s *FSMSprite[T]) To(state T) *FSMSprite[T] {
+	if s.sm.To(state) {
+		s.sync()
+	}
 	return s
 }
 
 func (s *FSMSprite[T]) SetState(state T) *FSMSprite[T] {
 	s.sm.Set(state)
+	s.sync()
 	return s
 }
 
-func (s *FSMSprite[T]) Draw(dst *ebiten.Image) {
-	if sp, ok := s.sprites[s.sm.Current()]; ok {
-		sp.Draw(dst)
-	}
-}
-
-func (s *FSMSprite[T]) In(x, y int) bool {
-	for _, img := range s.sprites {
-		return img.In(x, y)
-	}
-	return false
-}
-
-func (s *FSMSprite[T]) SetPosition(x, y float64) {
-	for _, img := range s.sprites {
-		img.SetPosition(x, y)
-	}
-}
-
-func (s *FSMSprite[T]) SetSize(x, y float64) {
-	for _, img := range s.sprites {
-		img.SetSize(x, y)
+func (s *FSMSprite[T]) sync() {
+	if err := s.SetActiveImage(s.stateSpriteIdx[s.sm.Current()]); err != nil {
+		fmt.Println("FSMSprite: Could not set the active image:", err.Error())
 	}
 }

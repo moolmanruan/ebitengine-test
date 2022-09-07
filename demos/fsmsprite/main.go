@@ -24,9 +24,9 @@ var ErrCloseGame = errors.New("close game")
 
 func (g *Game) Update() error {
 	if time.Now().Second()%2 == 0 {
-		closeSprite.SetState(Normal)
+		closeSprite.To(Normal)
 	} else {
-		closeSprite.SetState(Pressed)
+		closeSprite.To(Pressed)
 	}
 	return nil
 }
@@ -63,7 +63,10 @@ func loadSprites() error {
 	closeSprite = fsm.New[ButtonState]().
 		AddState(Normal, imageGrid.ImageAt(0, 0)).
 		AddState(Pressed, imageGrid.ImageAt(1, 0)).
+		AddTransition(Normal, Pressed).
+		AddTransition(Pressed, Normal).
 		SetState(Normal)
+	closeSprite.SetPosition(screenWidth/2-tileW/2, screenHeight/2-tileH/2)
 
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/moolmanruan/ebitengine-test/animate"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"image"
 	_ "image/png"
@@ -75,12 +76,11 @@ func loadSprites() error {
 		imageGrid.ImageAt(2, 2),
 		imageGrid.ImageAt(3, 2),
 	}
-	animationInterval := time.Millisecond * 100
-	idleSprite = sprite.NewAnimated(idleImages, animationInterval)
+	idleSprite = sprite.NewAnimated(idleImages)
 	idleSprite.SetPosition(0, 0)
-	runnerSprite = sprite.NewAnimated(runImages, animationInterval)
+	runnerSprite = sprite.NewAnimated(runImages)
 	runnerSprite.SetPosition(runnerW, 0)
-	fallSprite = sprite.NewAnimated(fallImages, animationInterval)
+	fallSprite = sprite.NewAnimated(fallImages)
 	fallSprite.SetPosition(runnerW*2, 0)
 	return nil
 }
@@ -91,9 +91,25 @@ func main() {
 	if err := loadSprites(); err != nil {
 		log.Fatal(err)
 	}
-	idleSprite.Play()
-	runnerSprite.Play()
-	fallSprite.Play()
+	animationDuration := time.Second
+	go func() {
+		for {
+			idleSprite.Play(animationDuration)                              // 1 iteration (default)
+			runnerSprite.Play(animationDuration, animate.WithIterations(2)) // 2 iterations
+			fallSprite.Play(animationDuration, animate.WithIterations(0))   // infinite iterations
+			time.Sleep(animationDuration * 4)
+
+			idleSprite.Play(animationDuration)                                   // 0 seconds (default)
+			runnerSprite.Play(animationDuration, animate.WithDelay(time.Second)) // 1 second
+			fallSprite.Play(animationDuration, animate.WithDelay(time.Second*2)) // 2 seconds
+			time.Sleep(animationDuration * 3)
+
+			idleSprite.Stop()
+			runnerSprite.Stop()
+			fallSprite.Stop()
+			time.Sleep(animationDuration)
+		}
+	}()
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation Demo")
