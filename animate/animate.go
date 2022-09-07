@@ -1,6 +1,7 @@
 package animate
 
 import (
+	"math"
 	"time"
 )
 
@@ -132,12 +133,12 @@ func animateInt(update func(int), from, to int, stop *bool, duration time.Durati
 	}
 }
 
-// Value a value from one value to another.
+// Float64 a value from one value to another.
 // value is a pointer to the value that will be animated
 // from and to are the start and endpoints of the animation
 // duration is the duration of the animation
 // interval is the time between updates
-func Value(value *float64, to float64, duration time.Duration, opts ...Option) (cancel func()) {
+func Float64(value *float64, to float64, duration time.Duration, opts ...Option) (cancel func()) {
 	oo := defaultOptions()
 	for _, o := range opts {
 		o(&oo)
@@ -152,9 +153,11 @@ func Value(value *float64, to float64, duration time.Duration, opts ...Option) (
 }
 
 func animate(value *float64, to float64, duration time.Duration, stop *bool, opts options) {
-	startTime := time.Now().Add(opts.delay)
 	from := *value // copy start value
 	valueRange := to - from
+
+	time.Sleep(opts.delay)
+	startTime := time.Now()
 	for {
 		if *stop {
 			return
@@ -167,11 +170,12 @@ func animate(value *float64, to float64, duration time.Duration, stop *bool, opt
 		}
 
 		progress := float64(runTime.Nanoseconds()) / float64(duration.Nanoseconds())
-		if progress >= 1 {
+		if opts.iterations > 0 && int(math.Floor(progress)) >= opts.iterations {
 			*value = to
 			return
 		}
-		*value = from + progress*valueRange
+		iterProgress := progress - math.Trunc(progress)
+		*value = from + iterProgress*valueRange
 		time.Sleep(opts.interval)
 	}
 }

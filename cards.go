@@ -52,8 +52,8 @@ func (c *GameCard) Position() (x, y float64) {
 }
 
 func (c *GameCard) SetPosition(pos vec2.T, duration, delay time.Duration) *GameCard {
-	animate.Value(&c.pos[0], pos[0], duration, animate.WithDelay(delay))
-	animate.Value(&c.pos[1], pos[1], duration, animate.WithDelay(delay))
+	animate.Float64(&c.pos[0], pos[0], duration, animate.WithDelay(delay))
+	animate.Float64(&c.pos[1], pos[1], duration, animate.WithDelay(delay))
 	return c
 }
 
@@ -79,7 +79,7 @@ func (c *GameCard) SetFaceUp(up bool, duration, delay time.Duration) *GameCard {
 	if c.cancelFlip != nil {
 		c.cancelFlip()
 	}
-	c.cancelFlip = animate.Value(&c.flipAngle, dest, duration, animate.WithDelay(delay))
+	c.cancelFlip = animate.Float64(&c.flipAngle, dest, duration, animate.WithDelay(delay))
 	return c
 }
 
