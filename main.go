@@ -130,10 +130,7 @@ var ErrCloseGame = errors.New("close game")
 func (g *Game) Update() error {
 	handleMouse(g)
 	x, y := ebiten.CursorPosition()
-	err := closeBtn.SetHover(closeBtn.In(x, y))
-	if err != nil {
-		return err
-	}
+	closeBtn.SetHover(closeBtn.In(x, y))
 
 	if g.closeGame {
 		return ErrCloseGame

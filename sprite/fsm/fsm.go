@@ -36,3 +36,22 @@ func (s *FSMSprite[T]) Draw(dst *ebiten.Image) {
 		sp.Draw(dst)
 	}
 }
+
+func (s *FSMSprite[T]) In(x, y int) bool {
+	for _, img := range s.sprites {
+		return img.In(x, y)
+	}
+	return false
+}
+
+func (s *FSMSprite[T]) SetPosition(x, y float64) {
+	for _, img := range s.sprites {
+		img.SetPosition(x, y)
+	}
+}
+
+func (s *FSMSprite[T]) SetSize(x, y float64) {
+	for _, img := range s.sprites {
+		img.SetSize(x, y)
+	}
+}

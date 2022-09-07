@@ -2,12 +2,19 @@ package button
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/moolmanruan/ebitengine-test/sprite"
+	"github.com/moolmanruan/ebitengine-test/sprite/fsm"
 	"image"
 )
 
+type State int
+
+const (
+	Normal State = 0
+	Hover  State = 1
+)
+
 type T struct {
-	sprite   *sprite.Sprite
+	sprite   *fsm.FSMSprite[State]
 	hoverIdx int
 }
 
@@ -15,8 +22,7 @@ type Option func(*T)
 
 func WithHoverImage(img image.Image) Option {
 	return func(b *T) {
-		b.sprite.AddImage(img)
-		b.hoverIdx = b.sprite.NumImages() - 1
+		b.sprite.AddState(Hover, img)
 	}
 }
 
@@ -34,7 +40,7 @@ func WithSize(x, y float64) Option {
 
 func New(normal image.Image, opts ...Option) *T {
 	b := &T{
-		sprite: sprite.New(normal),
+		sprite: fsm.New[State]().AddState(Normal, normal),
 	}
 	for _, opt := range opts {
 		opt(b)
@@ -50,10 +56,10 @@ func (b *T) In(x, y int) bool {
 	return b.sprite.In(x, y)
 }
 
-func (b *T) SetHover(hover bool) error {
-	if hover {
-		return b.sprite.SetActiveImage(b.hoverIdx)
-	} else {
-		return b.sprite.SetActiveImage(0)
+func (b *T) SetHover(hover bool) {
+	if !hover {
+		b.sprite.SetState(Normal)
+		return
 	}
+	b.sprite.SetState(Hover)
 }
