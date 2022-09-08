@@ -5,8 +5,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/moolmanruan/ebitengine-test/animate"
 	"github.com/moolmanruan/ebitengine-test/deck"
+	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/playingcards"
-	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/ungerik/go3d/float64/vec2"
 	"math"
 	"time"
@@ -114,11 +114,11 @@ func (c *GameCard) In(x, y int) bool {
 }
 
 func setupDeck() (deck.Deck[*GameCard], error) {
-	img, err := sprite.ImageFromBytes(cardsImageBytes)
+	img, err := imagex.FromBytes(cardsImageBytes)
 	if err != nil {
 		return deck.Deck[*GameCard]{}, err
 	}
-	cardImgGrid := sprite.NewImageGrid(img, cardW, cardH)
+	cardImgGrid := imagex.NewGrid(img, cardW, cardH)
 	cardBack := cardImgGrid.ImageAt(0, 4)
 
 	standardCards := playingcards.StandardDeck()

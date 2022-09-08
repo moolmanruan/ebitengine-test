@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/moolmanruan/ebitengine-test/deck"
+	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/moolmanruan/ebitengine-test/ui/button"
 	"github.com/moolmanruan/ebitengine-test/ui/dialog"
@@ -81,7 +82,7 @@ func handleMouseClick(g *Game) {
 		g.closeGame = true
 	}
 	if closeAnim.In(x, y) {
-		closeAnim.Play()
+		closeAnim.Play(time.Second)
 	}
 }
 
@@ -168,20 +169,18 @@ var closeBtn *button.T
 var closeAnim *sprite.AnimatedSprite
 
 func loadCloseSprite() error {
-	closeImg, err := sprite.ImageFromBytes(closeBytes)
+	closeImg, err := imagex.FromBytes(closeBytes)
 	if err != nil {
 		return err
 	}
-	closeImages := sprite.NewImageGrid(closeImg, 16, 16)
+	closeImages := imagex.NewGrid(closeImg, 16, 16)
 	closeBtn = button.New(
 		closeImages.ImageAt(0, 0),
 		button.WithHoverImage(closeImages.ImageAt(1, 0)),
 		button.WithAbsolutePosition(screenWidth-32-5, 5),
 		button.WithSize(32, 32))
 
-	closeAnim = sprite.NewAnimated(
-		closeImages.List(),
-		time.Second)
+	closeAnim = sprite.NewAnimated(closeImages.List())
 	closeAnim.SetPosition(50, 200)
 	return nil
 }
@@ -192,7 +191,7 @@ var dialogBytes []byte
 var mainDialog *dialog.T
 
 func loadDialog() error {
-	img, err := sprite.ImageFromBytes(dialogBytes)
+	img, err := imagex.FromBytes(dialogBytes)
 	if err != nil {
 		return err
 	}

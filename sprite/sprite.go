@@ -27,6 +27,9 @@ func New(imgs ...image.Image) *Sprite {
 }
 
 func (s *Sprite) Draw(dst *ebiten.Image) {
+	if s == nil {
+		return
+	}
 	dst.DrawImage(s.images[s.activeImg], s.drawOpts)
 }
 

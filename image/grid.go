@@ -1,24 +1,17 @@
-package sprite
+package image
 
 import (
-	"bytes"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
 
-func ImageFromBytes(bb []byte) (image.Image, error) {
-	img, _, err := image.Decode(bytes.NewReader(bb))
-	return img, err
-}
-
-// ImageGrid represents a regular grid of images created from a bigger image.
-type ImageGrid struct {
+// Grid represents a regular grid of images created from a bigger image.
+type Grid struct {
 	rows, cols int
 	ii         []image.Image
 }
 
-func NewImageGrid(img image.Image, x, y int) ImageGrid {
-	eImg := ebiten.NewImageFromImage(img)
+func NewGrid(img *image.RGBA, x, y int) Grid {
 	cols := img.Bounds().Size().X / x
 	rows := img.Bounds().Size().Y / y
 
@@ -26,13 +19,13 @@ func NewImageGrid(img image.Image, x, y int) ImageGrid {
 	for yi := 0; yi < rows; yi++ {
 		for xi := 0; xi < cols; xi++ {
 			xo, yo := xi*x, yi*y
-			ii = append(ii, eImg.SubImage(image.Rect(xo, yo, xo+x, yo+y)))
+			ii = append(ii, SubImage(img, image.Rect(xo, yo, xo+x, yo+y)))
 		}
 	}
-	return ImageGrid{rows: rows, cols: cols, ii: ii}
+	return Grid{rows: rows, cols: cols, ii: ii}
 }
 
-func NewImageGrid3x3(img image.Image, top, bottom, left, right int) ImageGrid {
+func NewGrid3x3(img image.Image, top, bottom, left, right int) Grid {
 	eImg := ebiten.NewImageFromImage(img)
 	w, h := eImg.Size()
 
@@ -49,14 +42,14 @@ func NewImageGrid3x3(img image.Image, top, bottom, left, right int) ImageGrid {
 	ii[6] = eImg.SubImage(image.Rect(0, h-bottom, left, bottom))
 	ii[7] = eImg.SubImage(image.Rect(left, h-bottom, w-right, bottom))
 	ii[8] = eImg.SubImage(image.Rect(w-right, h-bottom, right, bottom))
-	return ImageGrid{rows: 3, cols: 3, ii: ii}
+	return Grid{rows: 3, cols: 3, ii: ii}
 }
 
-func (g ImageGrid) List() []image.Image {
+func (g Grid) List() []image.Image {
 	return g.ii
 }
 
-func (g ImageGrid) ImageAt(x, y int) image.Image {
+func (g Grid) ImageAt(x, y int) image.Image {
 	if x < 0 || x >= g.cols || y < 0 || y >= g.rows {
 		return nil
 	}

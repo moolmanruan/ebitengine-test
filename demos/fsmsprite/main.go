@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/moolmanruan/ebitengine-test/sprite"
+	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite/fsm"
 	_ "image/png"
 	"log"
@@ -54,11 +54,11 @@ const (
 )
 
 func loadSprites() error {
-	img, err := sprite.ImageFromBytes(imgBytes)
+	img, err := imagex.FromBytes(imgBytes)
 	if err != nil {
 		return err
 	}
-	imageGrid := sprite.NewImageGrid(img, tileW, tileH)
+	imageGrid := imagex.NewGrid(img, tileW, tileH)
 
 	closeSprite = fsm.New[ButtonState]().
 		AddState(Normal, imageGrid.ImageAt(0, 0)).
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	ebiten.SetWindowTitle("Animation Demo")
+	ebiten.SetWindowTitle("Finite State Machine Sprite Demo")
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		if !errors.Is(err, ErrCloseGame) {
 			log.Fatal(err)

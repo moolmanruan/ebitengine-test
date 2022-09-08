@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/moolmanruan/ebitengine-test/animate"
+	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"image"
 	"image/color"
@@ -94,11 +95,11 @@ var fallSprite *sprite.AnimatedSprite
 var runP, idleP, fallP float64
 
 func loadSprites() error {
-	img, err := sprite.ImageFromBytes(runnerBytes)
+	img, err := imagex.FromBytes(runnerBytes)
 	if err != nil {
 		return err
 	}
-	imageGrid := sprite.NewImageGrid(img, runnerW, runnerH)
+	imageGrid := imagex.NewGrid(img, runnerW, runnerH)
 
 	idleImages := []image.Image{
 		imageGrid.ImageAt(0, 0),

@@ -2,6 +2,7 @@ package dialog
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"image"
 )
@@ -15,7 +16,7 @@ type T struct {
 }
 
 func New(img image.Image, top, right, bottom, left int) *T {
-	ig := sprite.NewImageGrid3x3(img, top, right, bottom, left).List()
+	ig := imagex.NewGrid3x3(img, top, right, bottom, left).List()
 	return &T{
 		sprite: sprite.New(ig...),
 	}
