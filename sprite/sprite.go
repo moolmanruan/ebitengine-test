@@ -85,6 +85,11 @@ func (s *Sprite) SetSize(x, y float64) {
 	s.SetScale(x/float64(w), y/float64(h))
 }
 
+func (s *Sprite) GetSize() (x, y float64) {
+	w, h := s.images[0].Size()
+	return float64(w) * s.sx, float64(h) * s.sy
+}
+
 // In indicates whether the given screen coordinates are in the Sprite's rectangle.
 func (s *Sprite) In(x, y int) bool {
 	xf, yf := float64(x), float64(y)

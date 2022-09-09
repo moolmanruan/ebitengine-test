@@ -39,10 +39,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-//go:embed resources/close.png
+//go:embed resources/button.png
 var imgBytes []byte
 
-const tileW, tileH = 16, 16
+const tileW, tileH = 49, 49
 
 var closeSprite *fsm.FSMSprite[ButtonState]
 

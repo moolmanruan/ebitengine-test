@@ -12,10 +12,10 @@ import (
 	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"github.com/moolmanruan/ebitengine-test/ui/button"
-	"github.com/moolmanruan/ebitengine-test/ui/dialog"
 	"github.com/ungerik/go3d/float64/vec2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
+	"image"
 	"image/color"
 	_ "image/png"
 	"log"
@@ -188,14 +188,15 @@ func loadCloseSprite() error {
 //go:embed resources/ui/dialog.png
 var dialogBytes []byte
 
-var mainDialog *dialog.T
+var mainDialog *pane.T
 
 func loadDialog() error {
 	img, err := imagex.FromBytes(dialogBytes)
 	if err != nil {
 		return err
 	}
-	mainDialog = dialog.New(img, 8, 8, 8, 8)
+	ig := imagex.NewGrid3x3(img, 8, 8, 8, 8)
+	mainDialog = pane.New(ig, image.Rect(0, 0, 24, 24))
 	return nil
 }
 
