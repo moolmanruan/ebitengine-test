@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/moolmanruan/ebitengine-test/grid"
 	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/sprite"
 	"image"
@@ -18,7 +19,7 @@ const (
 	scale          = 10
 	tileW, tileH   = 5, 5
 	pixelW, pixelH = tileW * scale, tileH * scale
-	cols, rows     = 10, 10
+	cols, rows     = 16, 8
 	screenWidth    = pixelW * cols
 	screenHeight   = pixelH * rows
 )
@@ -28,56 +29,50 @@ type Game struct {
 }
 
 func generateMap(g *Game) {
-	sprites = make([]*sprite.Sprite, cols*rows)
+	tileSprites = grid.New[*sprite.Sprite](cols, rows, nil)
 	fullSet := NewSet()
 	for i := 0; i < len(tileImages); i++ {
 		fullSet.Add(i)
 	}
-	spritesPossibleIdx := make([]Set, cols*rows)
-	for i := 0; i < len(spritesPossibleIdx); i++ {
-		spritesPossibleIdx[i] = fullSet.Copy()
-	}
-
-	indexFor := func(x, y int) int {
-		if x < 0 || x >= cols || y < 0 || y >= rows {
-			return -1
-		}
-		return x + y*cols
-	}
-	for si := range sprites {
-		possibleIndexes := spritesPossibleIdx[si].Values()
-		if len(possibleIndexes) == 0 {
+	tileGrid := grid.New[Set](cols, rows, func(_, _ int) Set {
+		return fullSet.Copy()
+	})
+	tileGrid.ForEach(func(s Set, x, y int) {
+		pvs := s.Values()
+		if len(pvs) == 0 {
 			return
 		}
-		chosenTileIdx := possibleIndexes[rand.Intn(len(possibleIndexes))]
+		chosenTileIdx := pvs[rand.Intn(len(pvs))]
 
 		rules := g.rules[chosenTileIdx]
 
-		sx, sy := si%cols, si/cols
-		tI, bI, rI, lI := indexFor(sx, sy-1), indexFor(sx, sy+1), indexFor(sx+1, sy), indexFor(sx-1, sy)
 		// Reduce top tile's possibilities
-		if tI != -1 {
-			spritesPossibleIdx[tI] = spritesPossibleIdx[tI].Intersection(rules.top)
-		}
-		// Reduce left tile's possibilities
-		if lI != -1 {
-			spritesPossibleIdx[lI] = spritesPossibleIdx[lI].Intersection(rules.left)
-		}
-		// Reduce right tile's possibilities
-		if rI != -1 {
-			spritesPossibleIdx[rI] = spritesPossibleIdx[rI].Intersection(rules.right)
+		topSet, err := tileGrid.Get(x, y-1)
+		if err == nil {
+			_ = tileGrid.Set(x, y-1, topSet.Intersection(rules.top))
 		}
 		// Reduce bottom tile's possibilities
-		if bI != -1 {
-			spritesPossibleIdx[bI] = spritesPossibleIdx[bI].Intersection(rules.bottom)
+		botSet, err := tileGrid.Get(x, y+1)
+		if err == nil {
+			_ = tileGrid.Set(x, y+1, botSet.Intersection(rules.bottom))
+		}
+		// Reduce right tile's possibilities
+		rightSet, err := tileGrid.Get(x+1, y)
+		if err == nil {
+			_ = tileGrid.Set(x+1, y, rightSet.Intersection(rules.right))
+		}
+		// Reduce bottom tile's possibilities
+		leftSet, err := tileGrid.Get(x-1, y)
+		if err == nil {
+			_ = tileGrid.Set(x-1, y, leftSet.Intersection(rules.left))
 		}
 
 		tile := tileImages[chosenTileIdx]
 		ns := sprite.New(tile)
 		ns.SetScale(scale, scale)
-		ns.SetPosition(float64(si%cols)*pixelW, float64(si/cols)*pixelH)
-		sprites[si] = ns
-	}
+		ns.SetPosition(float64(x*pixelW), float64(y*pixelH))
+		_ = tileSprites.Set(x, y, ns)
+	})
 }
 
 func (g *Game) Update() error {
@@ -88,9 +83,9 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	for _, s := range sprites {
+	tileSprites.ForEach(func(s *sprite.Sprite, _, _ int) {
 		s.Draw(screen)
-	}
+	})
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {
@@ -101,7 +96,7 @@ func (g *Game) Layout(_, _ int) (int, int) {
 var imgBytes []byte
 
 var tileImages []image.Image
-var sprites []*sprite.Sprite
+var tileSprites grid.Grid[*sprite.Sprite]
 
 func loadImages() ([]image.Image, error) {
 	img, err := imagex.FromBytes(imgBytes)
@@ -111,15 +106,14 @@ func loadImages() ([]image.Image, error) {
 	return imagex.NewGrid(img, tileW, tileH).List(), nil
 }
 
-var tPixels = [][2]int{{0, 0}, {2, 0}, {4, 0}}
-var bPixels = [][2]int{{0, 4}, {2, 4}, {4, 4}}
-var rPixels = [][2]int{{4, 0}, {4, 2}, {4, 4}}
-var lPixels = [][2]int{{0, 0}, {0, 2}, {0, 4}}
+var tPixels = [][2]int{{0, 0}, {4, 0}}
+var bPixels = [][2]int{{0, 4}, {4, 4}}
+var rPixels = [][2]int{{4, 0}, {4, 4}}
+var lPixels = [][2]int{{0, 0}, {0, 4}}
 
 func getValidTop(img image.Image, others []image.Image) Set {
 	return getImagesWithMatchingPixels(img, others, tPixels, bPixels)
 }
-
 func getValidRight(img image.Image, others []image.Image) Set {
 	return getImagesWithMatchingPixels(img, others, rPixels, lPixels)
 }
