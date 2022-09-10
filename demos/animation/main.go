@@ -101,29 +101,10 @@ func loadSprites() error {
 	}
 	imageGrid := imagex.TileSlice(img, runnerW, runnerH)
 
-	idleImages := []image.Image{
-		imageGrid.ImageAt(0, 0),
-		imageGrid.ImageAt(1, 0),
-		imageGrid.ImageAt(2, 0),
-		imageGrid.ImageAt(3, 0),
-		imageGrid.ImageAt(4, 0),
-	}
-	runImages := []image.Image{
-		imageGrid.ImageAt(0, 1),
-		imageGrid.ImageAt(1, 1),
-		imageGrid.ImageAt(2, 1),
-		imageGrid.ImageAt(3, 1),
-		imageGrid.ImageAt(4, 1),
-		imageGrid.ImageAt(5, 1),
-		imageGrid.ImageAt(6, 1),
-		imageGrid.ImageAt(7, 1),
-	}
-	fallImages := []image.Image{
-		imageGrid.ImageAt(0, 2),
-		imageGrid.ImageAt(1, 2),
-		imageGrid.ImageAt(2, 2),
-		imageGrid.ImageAt(3, 2),
-	}
+	idleImages := imageGrid.RowSlice(0, 0, 5)
+	runImages := imageGrid.RowSlice(1, 0, 8)
+	fallImages := imageGrid.RowSlice(2, 0, 4)
+
 	idleSprite = sprite.NewAnimated(idleImages)
 	idleSprite.SetPosition(0, 0)
 	runnerSprite = sprite.NewAnimated(runImages)

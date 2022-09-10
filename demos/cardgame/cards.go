@@ -119,13 +119,13 @@ func setupDeck() (deck.Deck[*GameCard], error) {
 		return deck.Deck[*GameCard]{}, err
 	}
 	cardImgGrid := imagex.TileSlice(img, cardW, cardH)
-	cardBack := cardImgGrid.ImageAt(0, 4)
+	cardBack := cardImgGrid.At(0, 4)
 
 	standardCards := playingcards.StandardDeck()
 
 	cc := make([]*GameCard, len(standardCards))
 	for i, c := range standardCards {
-		card := cardImgGrid.ImageAt(int(c.Face), int(c.Suit)-1)
+		card := cardImgGrid.At(int(c.Face), int(c.Suit)-1)
 		cc[i] = NewGameCard(c,
 			ebiten.NewImageFromImage(card),
 			ebiten.NewImageFromImage(cardBack))

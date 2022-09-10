@@ -61,8 +61,8 @@ func loadSprites() error {
 	imageGrid := imagex.TileSlice(img, tileW, tileH)
 
 	closeSprite = fsm.New[ButtonState]().
-		AddState(Normal, imageGrid.ImageAt(0, 0)).
-		AddState(Pressed, imageGrid.ImageAt(1, 0)).
+		AddState(Normal, imageGrid.At(0, 0)).
+		AddState(Pressed, imageGrid.At(1, 0)).
 		AddTransition(Normal, Pressed).
 		AddTransition(Pressed, Normal).
 		SetState(Normal)

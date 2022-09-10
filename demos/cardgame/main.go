@@ -167,8 +167,8 @@ func loadCloseSprite() error {
 	}
 	closeImages := imagex.TileSlice(closeImg, 16, 16)
 	closeBtn = button.New(
-		closeImages.ImageAt(0, 0),
-		button.WithHoverImage(closeImages.ImageAt(1, 0)),
+		closeImages.At(0, 0),
+		button.WithHoverImage(closeImages.At(1, 0)),
 		button.WithAbsolutePosition(screenWidth-32-5, 5),
 		button.WithSize(32, 32))
 	return nil

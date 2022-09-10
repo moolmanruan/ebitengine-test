@@ -15,10 +15,10 @@ type T struct {
 	verDist    [3]float64
 }
 
-func New(imgGrid imagex.Grid, rectangle image.Rectangle) *T {
+func New(imgGrid imagex.SlicedImage, rectangle image.Rectangle) *T {
 	var hd, vd [3]float64
 	sg := grid.New(3, 3, func(x, y int) *sprite.Sprite {
-		img := imgGrid.ImageAt(x, y)
+		img := imgGrid.At(x, y)
 		b := img.Bounds()
 		hd[x] = float64(b.Dx())
 		vd[x] = float64(b.Dy())
