@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	imagex "github.com/moolmanruan/ebitengine-test/image"
 	"github.com/moolmanruan/ebitengine-test/ui/panel"
 	"image"
@@ -24,6 +25,9 @@ type Game struct {
 var ErrCloseGame = errors.New("close game")
 
 func (g *Game) Update() error {
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return ErrCloseGame
+	}
 	return nil
 }
 
@@ -41,7 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	panelGrid := imagex.NewGrid3x3(p, 49, 49, 49, 49)
+	panelGrid := imagex.NineSlice(p, 49, 49, 49, 49)
 	d := panel.New(panelGrid, image.Rect(50, 50, 350, 250))
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)

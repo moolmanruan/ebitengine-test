@@ -1,7 +1,6 @@
 package image
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
 
@@ -11,37 +10,41 @@ type Grid struct {
 	ii         []image.Image
 }
 
-func NewGrid(img *image.RGBA, x, y int) Grid {
-	cols := img.Bounds().Size().X / x
-	rows := img.Bounds().Size().Y / y
+// TileSlice splits a given image into sub-images with a width `w` and height
+// `h` each.
+func TileSlice(img image.Image, w, h int) Grid {
+	cols := img.Bounds().Size().X / w
+	rows := img.Bounds().Size().Y / h
 
 	ii := make([]image.Image, 0, cols*rows)
 	for yi := 0; yi < rows; yi++ {
 		for xi := 0; xi < cols; xi++ {
-			xo, yo := xi*x, yi*y
-			ii = append(ii, SubImage(img, image.Rect(xo, yo, xo+x, yo+y)))
+			xo, yo := xi*w, yi*h
+			ii = append(ii, SubImage(img, image.Rect(xo, yo, xo+w, yo+h)))
 		}
 	}
 	return Grid{rows: rows, cols: cols, ii: ii}
 }
 
-func NewGrid3x3(img image.Image, top, bottom, left, right int) Grid {
-	eImg := ebiten.NewImageFromImage(img)
-	w, h := eImg.Size()
-
+// NineSlice splits a given image into 9 sub-image. This is used to draw the
+// images at any size without distorting the corners and edged by keeping the
+// corner tiles their normal size and stretching the inner tiles to fill the
+// additional space.
+func NineSlice(img image.Image, top, bottom, left, right int) Grid {
+	w, h := img.Bounds().Dx(), img.Bounds().Dy()
 	ii := make([]image.Image, 9)
 
-	ii[0] = eImg.SubImage(image.Rect(0, 0, left, top))
-	ii[1] = eImg.SubImage(image.Rect(left, 0, w-right, top))
-	ii[2] = eImg.SubImage(image.Rect(w-right, 0, w, top))
+	ii[0] = SubImage(img, image.Rect(0, 0, left, top))
+	ii[1] = SubImage(img, image.Rect(left, 0, w-right, top))
+	ii[2] = SubImage(img, image.Rect(w-right, 0, w, top))
 
-	ii[3] = eImg.SubImage(image.Rect(0, top, left, h-bottom))
-	ii[4] = eImg.SubImage(image.Rect(left, top, w-right, h-bottom))
-	ii[5] = eImg.SubImage(image.Rect(w-right, top, w, h-bottom))
+	ii[3] = SubImage(img, image.Rect(0, top, left, h-bottom))
+	ii[4] = SubImage(img, image.Rect(left, top, w-right, h-bottom))
+	ii[5] = SubImage(img, image.Rect(w-right, top, w, h-bottom))
 
-	ii[6] = eImg.SubImage(image.Rect(0, h-bottom, left, h))
-	ii[7] = eImg.SubImage(image.Rect(left, h-bottom, w-right, h))
-	ii[8] = eImg.SubImage(image.Rect(w-right, h-bottom, w, h))
+	ii[6] = SubImage(img, image.Rect(0, h-bottom, left, h))
+	ii[7] = SubImage(img, image.Rect(left, h-bottom, w-right, h))
+	ii[8] = SubImage(img, image.Rect(w-right, h-bottom, w, h))
 	return Grid{rows: 3, cols: 3, ii: ii}
 }
 

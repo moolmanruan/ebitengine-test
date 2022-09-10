@@ -118,7 +118,7 @@ func setupDeck() (deck.Deck[*GameCard], error) {
 	if err != nil {
 		return deck.Deck[*GameCard]{}, err
 	}
-	cardImgGrid := imagex.NewGrid(img, cardW, cardH)
+	cardImgGrid := imagex.TileSlice(img, cardW, cardH)
 	cardBack := cardImgGrid.ImageAt(0, 4)
 
 	standardCards := playingcards.StandardDeck()

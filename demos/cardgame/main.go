@@ -165,7 +165,7 @@ func loadCloseSprite() error {
 	if err != nil {
 		return err
 	}
-	closeImages := imagex.NewGrid(closeImg, 16, 16)
+	closeImages := imagex.TileSlice(closeImg, 16, 16)
 	closeBtn = button.New(
 		closeImages.ImageAt(0, 0),
 		button.WithHoverImage(closeImages.ImageAt(1, 0)),

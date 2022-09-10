@@ -99,7 +99,7 @@ func loadSprites() error {
 	if err != nil {
 		return err
 	}
-	imageGrid := imagex.NewGrid(img, runnerW, runnerH)
+	imageGrid := imagex.TileSlice(img, runnerW, runnerH)
 
 	idleImages := []image.Image{
 		imageGrid.ImageAt(0, 0),

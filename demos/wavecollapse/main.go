@@ -103,7 +103,7 @@ func loadImages() ([]image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return imagex.NewGrid(img, tileW, tileH).List(), nil
+	return imagex.TileSlice(img, tileW, tileH).List(), nil
 }
 
 var tPixels = [][2]int{{0, 0}, {4, 0}}
