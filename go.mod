@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/blizzy78/ebitenui v0.0.0-20211114161546-ca1a302d930b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ebitengine/purego v0.0.0-20220816145426-8dbe340b03f1 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220806181222-55e207c401ad // indirect

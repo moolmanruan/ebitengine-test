@@ -8,6 +8,9 @@ import (
 
 func FromBytes(bb []byte) (*image.RGBA, error) {
 	img, _, err := image.Decode(bytes.NewReader(bb))
+	if err != nil {
+		return nil, err
+	}
 
 	if imgRGBA, ok := img.(*image.RGBA); ok {
 		return imgRGBA, nil
